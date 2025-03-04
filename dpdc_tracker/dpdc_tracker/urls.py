@@ -15,8 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
+
+router = DefaultRouter()
+router.register(r'balance-records', views.BalanceRecordViewSet)
+router.register(r'daily-usage', views.DailyUsageViewSet)
+router.register(r'monthly-usage', views.MonthlyUsageViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', include(router.urls)),
+    path('current-balance/', views.CurrentBalanceView.as_view(), name='current-balance'),
+    path('force-data-collection/', views.force_data_collection, name='force-data-collection'),
+    path('calculate-daily-usage/', views.calculate_daily_usage, name='calculate-daily-usage'),
 ]
