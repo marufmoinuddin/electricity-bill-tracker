@@ -53,19 +53,27 @@ class Command(BaseCommand):
             balance_info = check_balance_for_customer(customer_number)
             
             if balance_info:
-                # Create entry in database
+                # Check if there's already a balance entry with this value
+                current_balance = float(balance_info['balance'])
+                
+                # Get the latest entry to compare
+                latest_entry = BalanceEntry.objects.order_by('-timestamp').first()
+                
+                if latest_entry and latest_entry.balance == current_balance:
+                    self.stdout.write(self.style.SUCCESS(f'No change in balance detected (still {current_balance} Tk). Skipping database entry.'))
+                    return None
+                
+                # Create entry in database only if balance has changed or this is the first entry
                 entry = BalanceEntry.objects.create(
-                    balance=float(balance_info['balance']),
+                    balance=current_balance,
                     account_id=balance_info['account_id'],
                     customer_name=balance_info['customer_name'],
                     status=balance_info['status'],
                     timestamp=timezone.now()
                 )
 
-                self.stdout.write(self.style.SUCCESS(f'Balance saved successfully: {balance_info["balance"]} Tk'))
+                self.stdout.write(self.style.SUCCESS(f'Balance changed - new value saved: {current_balance} Tk'))
                 self.stdout.write(f'Calculated hourly usage: {entry.hourly_usage} Tk')
-                # Do not return a boolean - Django management commands should return None
-                # or return a string message if needed
                 return None
             else:
                 self.stderr.write(self.style.ERROR('Failed to fetch balance - no data returned'))
