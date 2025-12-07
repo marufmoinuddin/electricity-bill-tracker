@@ -2,3 +2,4 @@
 venv
 auth_token.txt
 dpdc_tracker/auth_token.txt
+*.pyc
